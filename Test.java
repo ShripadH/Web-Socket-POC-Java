@@ -29,6 +29,8 @@ public class NotificationServiceTest {
     NotificationResponse expectedResponse = new NotificationResponse();
     expectedResponse.setStatus(NotificationStatus.INPROGRESS);
     
+    WebClient.RequestHeadersUriSpec<?> webClientRequest = mock(WebClient.RequestHeadersUriSpec.class);
+    
     when(webClientBuilder.build()).thenReturn(webClient);
     when(webClient.post()).thenReturn(webClientRequest);
     when(webClientRequest.uri(any(String.class))).thenReturn(webClientRequest);
