@@ -1,0 +1,87 @@
+To listen for WebSocket messages on a specific topic using STOMP (Simple Text Oriented Messaging Protocol) in an Angular application, you can use the @stomp/stompjs library along with RxJS. Follow these steps:
+
+Install the required packages:
+bash
+Copy code
+npm install @stomp/stompjs rxjs
+Create a WebSocketService that encapsulates the STOMP connection. Create a file named websocket.service.ts:
+typescript
+Copy code
+import { Injectable } from '@angular/core';
+import { Client, Message } from '@stomp/stompjs';
+import { Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class WebSocketService {
+  private stompClient: Client;
+
+  constructor() {
+    // Replace 'your-socket-server-url' with your WebSocket server URL
+    this.stompClient = new Client({
+      brokerURL: 'your-socket-server-url',
+      reconnectDelay: 5000,
+    });
+  }
+
+  connect(): Observable<Message> {
+    return new Observable((observer) => {
+      this.stompClient.onConnect = () => {
+        // Replace '/topic/your-topic' with your actual STOMP topic
+        const subscription = this.stompClient.subscribe('/topic/your-topic', (message) => {
+          observer.next(message);
+        });
+
+        observer.add(() => {
+          subscription.unsubscribe();
+        });
+      };
+
+      this.stompClient.activate();
+    });
+  }
+}
+Make sure to replace 'your-socket-server-url' with your WebSocket server URL and '/topic/your-topic' with your actual STOMP topic.
+
+In your component, you can now use the WebSocketService to listen for messages on the specified topic. For example, in app.component.ts:
+typescript
+Copy code
+import { Component, OnInit } from '@angular/core';
+import { WebSocketService } from './websocket.service';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent implements OnInit {
+  constructor(private webSocketService: WebSocketService) {}
+
+  ngOnInit() {
+    this.webSocketService.connect().subscribe((message) => {
+      console.log('Received message on topic:', message.body);
+      // Handle the message as needed
+    });
+  }
+}
+Replace 'your-topic' with the actual topic you want to listen to.
+
+Ensure that you've provided the WebSocketService in your module:
+typescript
+Copy code
+// app.module.ts
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+import { WebSocketService } from './websocket.service';
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule],
+  providers: [WebSocketService], // Provide the WebSocketService
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+Remember to configure your STOMP server accordingly, and adjust the code based on your specific WebSocket server and STOMP topic implementation.
